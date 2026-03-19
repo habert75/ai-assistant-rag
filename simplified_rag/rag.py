@@ -3,13 +3,15 @@ from os import listdir
 from dotenv import load_dotenv
 from os.path import isfile, join
 from typing import Literal, get_args
-from langchain.chains import RetrievalQA
-from langchain.schema.document import Document
+from langchain_core.documents import Document
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.runnables import RunnablePassthrough
+from langchain_core.output_parsers import StrOutputParser
 from langchain_community.tools import WikipediaQueryRun
 from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 from langchain_community.document_loaders import PyPDFLoader
-from langchain_community.utilities import WikipediaAPIWrapper 
-from langchain.text_splitter import RecursiveCharacterTextSplitter 
+from langchain_community.utilities import WikipediaAPIWrapper
+from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_community.vectorstores import DocArrayInMemorySearch
 
 DataSource = Literal["Wikipedia", "Research Paper"]
@@ -60,16 +62,35 @@ def retrieve_info(source: DataSource, data_set: DocArrayInMemorySearch, query: s
     if source not in SUPPORTED_DATA_SOURCES:
         raise ValueError(f"Provided data source {source} is not supported.")
 
-    qa = RetrievalQA.from_chain_type(
-        llm = llm,
-        chain_type="stuff",
-        retriever = data_set.as_retriever(), # repla
-        verbose=True,
+    # Create a RAG prompt template
+    template = """Answer the question based only on the following context:
+{context}
+
+Question: {question}
+
+Answer:"""
+    
+    prompt = ChatPromptTemplate.from_template(template)
+    
+    # Create retriever
+    retriever = data_set.as_retriever()
+    
+    # Format documents function
+    def format_docs(docs):
+        return "\n\n".join(doc.page_content for doc in docs)
+    
+    # Create the chain
+    rag_chain = (
+        {"context": retriever | format_docs, "question": RunnablePassthrough()}
+        | prompt
+        | llm
+        | StrOutputParser()
     )
-
-    output = qa.invoke(query)
-
-    return output
+    
+    # Invoke the chain
+    output = rag_chain.invoke(query)
+    
+    return {"result": output, "query": query}
 
 
 def generate_answer(selection: DataSource, query: str):
