@@ -13,9 +13,15 @@ if 'selection' not in st.session_state:
 # clearing previously loaded pool of docs
 target_folder = pathlib.Path().absolute()  / "docs/"
 
-if target_folder.exists():
-    shutil.rmtree(target_folder)
+# Ensure directory exists
 target_folder.mkdir(parents=True, exist_ok=True)
+
+# Clear contents instead of removing directory (needed for Kubernetes volumes)
+for item in target_folder.iterdir():
+    if item.is_file():
+        item.unlink()
+    elif item.is_dir():
+        shutil.rmtree(item)
 
 # activating selection box for user choice 
 options = False

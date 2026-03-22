@@ -1,0 +1,23 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: ai-assistant-rag
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/your-username/your-repo.git  # Update this with your Git repository
+    targetRevision: HEAD
+    path: ai-assistant-rag/k8s
+    directory:
+      # Exclude secret.yaml from Argo CD sync - secrets should be created manually
+      exclude: 'secret.yaml'
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: ai-assistant-rag
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+    - CreateNamespace=true

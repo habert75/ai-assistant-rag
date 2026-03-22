@@ -1,0 +1,27 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: ai-assistant-rag-app
+  namespace: argocd
+spec:
+  project: default
+  source:
+    # Option 1: If using Git repository (update with your repo URL)
+    # repoURL: https://github.com/your-username/your-repo
+    # targetRevision: HEAD
+    # path: "ai-assistant-rag/cd"
+    
+    # Option 2: For local development with Docker Desktop
+    # Using local path (requires mounting the path to Argo CD)
+    repoURL: file:///mnt/c/Users/Admin/Documents/Training/Argo CD/ai-assistant-rag
+    targetRevision: HEAD
+    path: "cd"
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: ai-assistant-rag
+  syncPolicy:
+    automated:
+      selfHeal: true
+      prune: true
+    syncOptions:
+    - CreateNamespace=true

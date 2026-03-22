@@ -1,6 +1,11 @@
 .venv
 .env
 
+# Kubernetes secrets - never commit these!
+k8s/secret.yaml
+cd/secret.yaml
+**/secret.yaml
+
 __pycache__
 # ChromaDB
 chroma_db/
