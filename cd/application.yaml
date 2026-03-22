@@ -13,7 +13,7 @@ spec:
     
     # Option 2: For local development with Docker Desktop
     # Using local path (requires mounting the path to Argo CD)
-    repoURL: file:///mnt/c/Users/Admin/Documents/Training/Argo CD/ai-assistant-rag
+    repoURL: https://github.com/habert75/ai-assistant-rag
     targetRevision: HEAD
     path: "cd"
   destination:
