@@ -28,7 +28,7 @@ options = False
 emp = st.empty()
 vari = emp.selectbox(
     key = "Options",
-    label = "Please select the option for query running:",
+    label = "Please select the option for query running below:",
     options = ("Wikipedia", "Research Paper")
 )
 
