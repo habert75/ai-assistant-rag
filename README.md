@@ -99,6 +99,31 @@ port = 8503
 address = "0.0.0.0"
 ```
 
+---
+
+## 🚀 Kubernetes & ArgoCD Deployment
+
+For production deployment using Kubernetes and ArgoCD with proper GitOps workflow, see:
+
+📘 **[DEPLOYMENT.md](DEPLOYMENT.md)** - Complete deployment guide with:
+- Versioned Docker image workflow
+- ArgoCD integration
+- Automated deployment script
+- Troubleshooting tips
+
+### Quick Deploy
+
+```powershell
+# Use the automated deployment script
+.\deploy.ps1 -Version v1.0.4 -Message "Your deployment message"
+```
+
+**Current Setup:**
+- Docker Hub: `habert/ai-assistant-rag`
+- GitHub: `https://github.com/habert75/ai-assistant-rag`
+- Kubernetes Namespace: `ai-assistant-rag`
+- Service URL: http://localhost:8503
+
 ## Project Structure
 
 ```
