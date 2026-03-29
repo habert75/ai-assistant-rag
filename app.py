@@ -39,7 +39,7 @@ if st.button("Select"):
 
 def wiki_choice() -> str:
     wiki_query = st.text_input(
-        label = "Please input your Wikipedia search query",
+        label = "Please input your Wikipedia search query below. Fun",
         max_chars = 256
     )
 
