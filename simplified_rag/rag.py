@@ -13,7 +13,7 @@ from langchain_community.document_loaders import PyPDFLoader
 from langchain_community.utilities import WikipediaAPIWrapper
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_community.vectorstores import DocArrayInMemorySearch
-from langfuse import Langfuse
+from langfuse.langchain import CallbackHandler
 
 DataSource = Literal["Wikipedia", "Research Paper"]
 SUPPORTED_DATA_SOURCES = get_args(DataSource)
@@ -25,8 +25,8 @@ OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY")
 if OPENAI_API_KEY == 'xxxxxxxx':
     raise ValueError("Please add your own OpenAI API key in the .env file by replacing 'xxxxxxxx' with your own key.")
 
-# Initialize Langfuse
-langfuse = Langfuse()
+# Initialize Langfuse CallbackHandler
+langfuse_handler = CallbackHandler()
 
 # loading model and defining embedding
 llm = ChatOpenAI(temperature=0, model='gpt-3.5-turbo')
@@ -66,59 +66,43 @@ def retrieve_info(source: DataSource, data_set: DocArrayInMemorySearch, query: s
     if source not in SUPPORTED_DATA_SOURCES:
         raise ValueError(f"Provided data source {source} is not supported.")
 
-    # Langfuse tracing for RAG retrieval
-    with langfuse.start_as_current_span(
-        name=f"RAG Retrieval - {source}",
-        input={"query": query, "source": source}
-    ) as span:
-        # Create a RAG prompt template
-        template = """Answer the question based only on the following context:
+    # Create a RAG prompt template
+    template = """Answer the question based only on the following context:
 {context}
 
 Question: {question}
 
 Answer:"""
-        
-        prompt = ChatPromptTemplate.from_template(template)
-        
-        # Create retriever
-        retriever = data_set.as_retriever()
-        
-        # Format documents function
-        def format_docs(docs):
-            return "\n\n".join(doc.page_content for doc in docs)
-        
-        # Create the chain
-        rag_chain = (
-            {"context": retriever | format_docs, "question": RunnablePassthrough()}
-            | prompt
-            | llm
-            | StrOutputParser()
-        )
-        
-        # Invoke the chain
-        output = rag_chain.invoke(query)
-        
-        # Update span with output
-        span.update(output={"result": output, "query": query})
-        
-        return {"result": output, "query": query}
+    
+    prompt = ChatPromptTemplate.from_template(template)
+    
+    # Create retriever
+    retriever = data_set.as_retriever()
+    
+    # Format documents function
+    def format_docs(docs):
+        return "\n\n".join(doc.page_content for doc in docs)
+    
+    # Create the chain
+    rag_chain = (
+        {"context": retriever | format_docs, "question": RunnablePassthrough()}
+        | prompt
+        | llm
+        | StrOutputParser()
+    )
+    
+    # Invoke the chain with Langfuse callback
+    output = rag_chain.invoke(query, config={"callbacks": [langfuse_handler]})
+    
+    return {"result": output, "query": query}
 
 
 def generate_answer(selection: DataSource, query: str):
     if selection not in SUPPORTED_DATA_SOURCES:
         raise ValueError(f"Provided data source {selection} is not supported.")
 
-    # Langfuse tracing for the complete RAG pipeline
-    with langfuse.start_as_current_span(
-        name="RAG Pipeline",
-        input={"selection": selection, "query": query}
-    ) as span:
-        data_set = load_data_set(selection, query)
-        response = retrieve_info(selection, data_set, query)
-        
-        # Update span with final output
-        span.update(output=response)
-        
-        return response
+    data_set = load_data_set(selection, query)
+    response = retrieve_info(selection, data_set, query)
+    
+    return response
 print("hello")
