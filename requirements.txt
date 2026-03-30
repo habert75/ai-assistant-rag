@@ -8,3 +8,4 @@ langchain-text-splitters
 pypdf
 docarray
 wikipedia
+langfuse

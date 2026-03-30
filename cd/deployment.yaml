@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
       - name: ai-assistant-rag
-        image: habert/ai-assistant-rag:v1.0.2
+        image: habert/ai-assistant-rag:v1.0.3
         imagePullPolicy: Always
         ports:
         - containerPort: 8503
